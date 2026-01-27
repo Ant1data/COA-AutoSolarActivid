@@ -7,9 +7,10 @@ from google.oauth2.credentials import Credentials
 
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 
-VIDEO_PATH = os.environ["YOUTUBE_VIDEO_PATH"]
-COA_TYPE = os.environ["COA_TYPE"]  # DAILY ou WEEKLY
-DATE_LABEL = os.environ["COA_DATE_LABEL"]
+# Fallbacks pour éviter KeyError
+VIDEO_PATH = os.environ.get("YOUTUBE_VIDEO_PATH", "solar_activity_videos/daily/final_video.mp4")
+COA_TYPE = os.environ.get("COA_TYPE", "DAILY")  # DAILY ou WEEKLY
+DATE_LABEL = os.environ.get("COA_DATE_LABEL", date.today().isoformat())
 
 TITLE = (
     f"COA {COA_TYPE.capitalize()} – {DATE_LABEL}  "
@@ -35,7 +36,8 @@ COA_TYPE={COA_TYPE}
 COA_GENERATED={date.today().isoformat()}
 """
 
-token_info = json.loads(os.environ["YOUTUBE_TOKEN"])
+# YOUTUBE_TOKEN reste requis (secret)
+token_info = json.loads(os.environ["YOUTUBE_TOKEN"])  # doit être défini dans le workflow
 creds = Credentials.from_authorized_user_info(token_info, SCOPES)
 youtube = build("youtube", "v3", credentials=creds)
 

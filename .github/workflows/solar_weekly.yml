@@ -103,8 +103,8 @@ jobs:
       - name: Compute weekly label from filename
         id: weekly_label
         run: |
-          FILE_ALIAS=./artifact_weekly/final_video.mp4
-          LABEL_FILE=$(ls -1t ./artifact_weekly/*.mp4 | grep -v 'final_video.mp4' | head -n 1)
+          FILE_ALIAS=./artifact_weekly/solar_activity_videos/weekly/final_video.mp4
+          LABEL_FILE=$(find ./artifact_weekly -type f -name '*.mp4' | grep -v '/final_video.mp4$' | sort | tail -n 1)
           if [ -z "$LABEL_FILE" ]; then LABEL_FILE=$FILE_ALIAS; fi
           NAME=$(basename "$LABEL_FILE")
           NAME_NO_EXT=${NAME%.mp4}
@@ -112,8 +112,9 @@ jobs:
           echo "label=$NAME_NO_EXT" >> $GITHUB_OUTPUT
 
       - name: Upload weekly video to YouTube Shorts
-        run: |
-          python upload_youtube.py \
-            --video "${{ steps.weekly_label.outputs.file }}" \
-            --type WEEKLY \
-            --label "${{ steps.weekly_label.outputs.label }}"
+        env:
+          YOUTUBE_VIDEO_PATH: ${{ steps.weekly_label.outputs.file }}
+          COA_TYPE: WEEKLY
+          COA_DATE_LABEL: ${{ steps.weekly_label.outputs.label }}
+          YOUTUBE_TOKEN: ${{ secrets.YOUTUBE_TOKEN_JSON }}
+        run: python upload_youtube.py

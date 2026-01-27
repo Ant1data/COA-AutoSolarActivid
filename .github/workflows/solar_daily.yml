@@ -101,11 +101,24 @@ jobs:
           name: solar_activity_video_daily
           path: ./artifact_daily
 
-      - name: Upload daily video to YouTube Shorts
+      - name: Debug list artifact_daily
         run: |
-          DATE=$(date +'%Y-%m-%d')
-          FILE=$(ls -1 ./artifact_daily/*.mp4 | head -n 1)
-          python upload_youtube.py \
-            --video "$FILE" \
-            --type DAILY \
-            --label "${DATE}"
+          echo "Listing artifact_daily contents:" && find ./artifact_daily -maxdepth 3 -type f -print
+
+      - name: Compute date label
+        id: set_date
+        run: echo "label=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Upload daily video to YouTube Shorts
+        env:
+          YOUTUBE_VIDEO_PATH: ./artifact_daily/solar_activity_videos/daily/final_video.mp4
+          COA_TYPE: DAILY
+          COA_DATE_LABEL: ${{ steps.set_date.outputs.label }}
+          YOUTUBE_TOKEN: ${{ secrets.YOUTUBE_TOKEN_JSON }}
+        run: python upload_youtube.py
+
+      # 🔵 PLAYLISTS (30 jours glissants)
+      - name: Manage YouTube playlists (daily)
+        env:
+          YOUTUBE_TOKEN: ${{ secrets.YOUTUBE_TOKEN_JSON }}
+        run: python youtube_manage_playlists.py --type DAILY
