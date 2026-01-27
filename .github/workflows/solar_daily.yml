@@ -2,7 +2,7 @@ name: Auto Generate Solar Activity Video
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Exécution automatique chaque jour à 01h00 UTC
+    - cron: '0 0 * * *'  # 01h00 UTC
   workflow_dispatch:
 
 jobs:
@@ -26,22 +26,37 @@ jobs:
       - name: Run daily solar activity script
         run: python autovideo_daily.py
 
+      # 🔵 NOUVEAU — Upload YouTube Short
+      - name: Upload daily video to YouTube Shorts
+        env:
+          YOUTUBE_TOKEN: ${{ secrets.YOUTUBE_TOKEN }}
+          YOUTUBE_VIDEO_PATH: solar_activity_videos/daily/final_video.mp4
+          COA_TYPE: DAILY
+          COA_DATE_LABEL: $(date +'%Y-%m-%d')
+        run: python upload_youtube.py
+
+      # 🔵 NOUVEAU — Gestion playlists (30 jours glissants)
+      - name: Manage YouTube playlists (daily retention)
+        env:
+          YOUTUBE_TOKEN: ${{ secrets.YOUTUBE_TOKEN }}
+        run: python youtube_manage_playlists.py
+
+      # 🔒 CONSERVÉ — Artifacts GitHub
       - name: Upload final videos as artifacts
         uses: actions/upload-artifact@v4
         with:
           name: solar_activity_videos_daily
           path: solar_activity_videos/daily/**/*.mp4
 
+      # 🔒 CONSERVÉ — Commit GitHub
       - name: Commit all modified/generated files in one commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Ajouter JSON + vidéos
           git add -A Protons/daily || true
           git add -A solar_activity_videos/daily || true
 
-          # Faire un seul commit si modifications
           if ! git diff --cached --quiet; then
             git commit -m "Daily update: proton JSON and video $(date +'%d:%m:%Y')"
             git push
