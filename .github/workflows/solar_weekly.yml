@@ -37,7 +37,12 @@ jobs:
 
       - name: Set stable alias for weekly video
         run: |
-          LATEST=$(ls -1t solar_activity_videos/weekly/**/*.mp4 | head -n 1)
+          set -e
+          LATEST=$(ls -1t solar_activity_videos/weekly/**/*.mp4 2>/dev/null | head -n 1 || true)
+          if [ -z "$LATEST" ]; then
+            echo "No video found to alias under solar_activity_videos/weekly/."
+            exit 1
+          fi
           mkdir -p solar_activity_videos/weekly
           cp "$LATEST" solar_activity_videos/weekly/final_video.mp4
 
