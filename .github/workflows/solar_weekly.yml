@@ -56,13 +56,13 @@ jobs:
           set -euo pipefail
 
           LATEST="$(
-            find solar_activity_videos/weekly -type f -name '*.mp4' -print0 \
-            | xargs -0 ls -1t \
+            find solar_activity_videos/weekly -type f -name '*.mp4' ! -name 'final_video.mp4' -print0 \
+            | xargs -0 -r ls -1t \
             | head -n 1
           )"
 
           if [ -z "${LATEST:-}" ]; then
-            echo "No weekly video found, skipping alias step."
+            echo "No weekly video found (or only alias present), skipping alias step."
             exit 0
           fi
 
