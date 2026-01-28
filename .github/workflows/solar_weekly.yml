@@ -52,13 +52,12 @@ jobs:
       # ============================================================
       - name: Set stable alias for weekly video
         run: |
-          set -e
           LATEST=$(find solar_activity_videos/weekly -type f -name '*.mp4' -printf '%T@ %p\n' | sort -nr | awk '{print $2}' | head -n 1)
           if [ -z "$LATEST" ]; then
-            echo "No weekly video found."
-            exit 1
+            echo "No weekly video found, skipping alias step."
+          else
+            cp "$LATEST" solar_activity_videos/weekly/final_video.mp4
           fi
-          cp "$LATEST" solar_activity_videos/weekly/final_video.mp4
 
       # ============================================================
       # 7. Upload YouTube Shorts (weekly)
