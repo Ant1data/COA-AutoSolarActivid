@@ -1,70 +1,106 @@
 import os
 import json
-import re
-from datetime import date
+from datetime import datetime
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2.credentials import Credentials
 
-SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+# ============================================================
+# 1. Chargement du token OAuth depuis l'environnement
+# ============================================================
 
-# Fallbacks pour éviter KeyError
-VIDEO_PATH = os.environ.get("YOUTUBE_VIDEO_PATH", "solar_activity_videos/daily/final_video.mp4")
-COA_TYPE = os.environ.get("COA_TYPE", "DAILY")  # DAILY ou WEEKLY
-DATE_LABEL = os.environ.get("COA_DATE_LABEL", date.today().isoformat())
+raw_token = os.environ.get("YOUTUBE_TOKEN_JSON") or os.environ.get("YOUTUBE_TOKEN")
 
-# Sanitize helper pour enlever les caractères de contrôle
-_def_ctrl_re = re.compile(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]')
+if not raw_token:
+    raise RuntimeError(
+        "Missing YOUTUBE_TOKEN_JSON or YOUTUBE_TOKEN in environment variables"
+    )
 
-def sanitize_json_string(s: str) -> str:
-    return _def_ctrl_re.sub('', s)
+try:
+    token_info = json.loads(raw_token)
+except json.JSONDecodeError as e:
+    raise RuntimeError("Invalid JSON in YOUTUBE_TOKEN_JSON") from e
 
-_raw_token = os.environ.get("YOUTUBE_TOKEN_JSON") or os.environ.get("YOUTUBE_TOKEN")
-if not _raw_token:
-    raise RuntimeError("Missing YOUTUBE_TOKEN_JSON/YOUTUBE_TOKEN in environment")
-
-token_info = json.loads(sanitize_json_string(_raw_token))
-creds = Credentials.from_authorized_user_info(token_info, SCOPES)
-youtube = build("youtube", "v3", credentials=creds)
-
-TITLE = (
-    f"COA {COA_TYPE.capitalize()} – {DATE_LABEL}  "
-    "#cosmic #radiation #airplane #spaceweather #solarflare"
+creds = Credentials.from_authorized_user_info(
+    token_info,
+    scopes=["https://www.googleapis.com/auth/youtube.upload"],
 )
 
-DESCRIPTION = f"""Cosmic on Air – Automated Space Weather Report
+# ============================================================
+# 2. Client YouTube API
+# ============================================================
 
-Data Sources & Credits
-SOHO LASCO C2 – © NASA/ESA
-https://soho.nascom.nasa.gov
+youtube = build("youtube", "v3", credentials=creds)
 
-GOES Proton Flux – NOAA SWPC
-https://services.swpc.noaa.gov
+# ============================================================
+# 3. Paramètres vidéo (via variables d'environnement)
+# ============================================================
 
-NMDB Neutron Monitor Database
-https://www.nmdb.eu
+video_path = os.environ.get("YOUTUBE_VIDEO_PATH")
+coa_type = os.environ.get("COA_TYPE", "DAILY").upper()
+coa_date_label = os.environ.get("COA_DATE_LABEL")
 
-Thanks to the providers of public data.
-Attribution overlays appear on each segment.
+if not video_path or not os.path.exists(video_path):
+    raise RuntimeError(f"Video file not found: {video_path}")
 
-COA_TYPE={COA_TYPE}
-COA_GENERATED={date.today().isoformat()}
-"""
+if not coa_date_label:
+    coa_date_label = datetime.utcnow().strftime("%Y-%m-%d")
+
+# ============================================================
+# 4. Titre, description, tags (Shorts publics)
+# ============================================================
+
+title = f"COA {coa_type} {coa_date_label} #cosmic #radiation #airplane #spaceweather #solarflare"
+
+description = (
+    "Data Sources & Credits\n"
+    "SOHO LASCO C2 – © NASA/ESA: https://soho.nascom.nasa.gov\n"
+    "GOES Proton Flux – NOAA SWPC: https://services.swpc.noaa.gov\n"
+    "NMDB Neutron Monitor Database: https://www.nmdb.eu\n\n"
+    "Thanks to the providers of public data.\n"
+    "Attribution overlays appear on each segment."
+)
+
+tags = [
+    "cosmic",
+    "radiation",
+    "airplane",
+    "spaceweather",
+    "solarflare",
+    "cosmic on air",
+    "COA",
+]
+
+# ============================================================
+# 5. Upload YouTube
+# ============================================================
 
 request = youtube.videos().insert(
     part="snippet,status",
     body={
         "snippet": {
-            "title": TITLE,
-            "description": DESCRIPTION,
-            "categoryId": "28",
+            "title": title[:100],  # sécurité limite YouTube
+            "description": description,
+            "tags": tags,
+            "categoryId": "28",  # Science & Technology
         },
         "status": {
-            "privacyStatus": "public"
+            "privacyStatus": "public",
+            "selfDeclaredMadeForKids": False,
         },
     },
-    media_body=MediaFileUpload(VIDEO_PATH, resumable=True),
+    media_body=MediaFileUpload(
+        video_path,
+        chunksize=-1,
+        resumable=True,
+    ),
 )
 
+print("📤 Upload YouTube en cours...")
 response = request.execute()
-print("UPLOAD_OK", response["id"])
+
+video_id = response.get("id")
+if not video_id:
+    raise RuntimeError("Upload failed: no video ID returned")
+
+print(f"✅ Upload terminé : https://www.youtube.com/shorts/{video_id}")
