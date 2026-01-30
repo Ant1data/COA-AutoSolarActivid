@@ -64,8 +64,9 @@ label = (
 # 4. Métadonnées YouTube
 # ============================================================
 
+human_type = "daily" if coa_type == "DAILY" else "weekly"
 title = (
-    f"COA {coa_type} {label} "
+    f"Solar Radiation {human_type} — {label} "
     "#cosmic #radiation #airplane #spaceweather #solarflare"
 )
 
