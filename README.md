@@ -10,6 +10,10 @@ The three segments (SOHO / Protons / Neutrons) are vertically stacked using Open
 ## Core Features
 
 * Automatic daily and weekly generation (cron + manual dispatch).
+* Automatic upload to YouTube Shorts with clear titles:
+  * Daily: `Solar Radiation daily — <date J-1>`
+  * Weekly: `Solar Radiation weekly — <week label>`
+* Stable alias for latest video: `final_video.mp4` (daily & weekly)
 * Parallel download of SOHO images then 15s clip (60 FPS).
 * Dynamic proton flux visualization (energies ≥10, ≥50, ≥100, ≥500 MeV).
 * Multi‑station neutron visualization (KERG, OULU, TERA) + Pearson correlations.
@@ -60,7 +64,9 @@ python autovideo_daily.py
 Produces:
 ```
 solar_activity_videos/daily/<YYYY>/<Month>/DDMMYYYY_solar_activity.mp4
+solar_activity_videos/daily/final_video.mp4   # always points to the latest
 ```
+* The daily video and commit message use the date of the previous day (J-1, UTC).
 
 ### Weekly generation
 ```bash
@@ -69,12 +75,21 @@ python autovideo_weekly.py
 Produces:
 ```
 solar_activity_videos/weekly/<YYYY>/<Month>/Week n°X (DDMMYYYY-DDMMYYYY).mp4
+solar_activity_videos/weekly/final_video.mp4   # always points to the latest
 ```
 
-## GitHub Actions
+## GitHub Actions & YouTube Upload
 Scheduled workflows:
 * `solar_daily.yml` – every day at 00:00 UTC + manual dispatch.
 * `solar_weekly.yml` – every Monday at 00:00 UTC + manual dispatch.
+
+Each workflow:
+- Generates the video(s) and updates the alias `final_video.mp4`.
+- Uploads the latest video to YouTube Shorts with a clear title:
+  - Daily: `Solar Radiation daily — <date J-1>`
+  - Weekly: `Solar Radiation weekly — <week label>`
+- Uses a GitHub secret (`YOUTUBE_TOKEN_JSON`) for authentication (see below).
+- Commits the new video and JSON with a message reflecting the correct date/period.
 
 Manual trigger: Actions tab > select workflow > "Run workflow".
 
@@ -86,16 +101,28 @@ AutoSolarActivid/
   requirements.txt
   solar_activity_videos/
     daily/<YYYY>/<Month>/DDMMYYYY_solar_activity.mp4
+    daily/final_video.mp4
     weekly/<YYYY>/<Month>/Week n°X (DDMMYYYY-DDMMYYYY).mp4
+    weekly/final_video.mp4
   .github/workflows/
     solar_daily.yml
     solar_weekly.yml
 ```
 Temporary internal folders: `SOHO_videos/`, `SOHO_7days/`, `Protons_7days/`, `Neutrons_7days/`.
-
 Temporary cache used by weekly protons: `Protons/tmp_7days/`.
-
 The historical folder `solar_activity/` may still be created by scripts but is no longer used (replaced by direct downloads).
+## Music & Copyright
+**Do not use commercial music (e.g. Bag Raiders, etc.) in the generated videos.**
+To avoid copyright strikes or blocks on YouTube, use royalty-free or Creative Commons music.
+
+Recommended sources:
+- YouTube Audio Library (https://www.youtube.com/audiolibrary)
+- Incompetech (Kevin MacLeod) (https://incompetech.com/music/royalty-free/)
+- FreePD (https://freepd.com/)
+
+To add music:
+- Download a track and place it in `solar_activity_videos/assets/music/`.
+- Edit `autovideo_daily.py` or `autovideo_weekly.py` to mix the audio (optionally add a `--music` argument).
 
 ## Parameters & Customization
 | Parameter | File | Purpose |
@@ -123,6 +150,7 @@ The historical folder `solar_activity/` may still be created by scripts but is n
 * Video length: 15 s – 60 FPS (900 frames).
 * Automatic purge > 14 days (daily & weekly).
 * Configurable weekly retention (`MAX_WEEKLY_VIDEOS`).
+* Latest video always available as `final_video.mp4` (daily & weekly).
 
 ## Data Sources & Credits
 * SOHO LASCO C2 – © NASA/ESA: https://soho.nascom.nasa.gov
@@ -130,6 +158,7 @@ The historical folder `solar_activity/` may still be created by scripts but is n
 * NMDB Neutron Monitor Database: https://www.nmdb.eu
 
 Thanks to the providers of public data. Attribution overlays appear on each segment.
+YouTube upload is automated via GitHub Actions and uses a secure OAuth token (see repository secrets).
 
 ## Contributing
 Suggestions welcome: performance optimizations (e.g. frame interpolation), adding neutron stations, caption internationalization.
