@@ -15,6 +15,8 @@ jobs:
       # ============================================================
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # ============================================================
       # 2. Python
@@ -92,6 +94,7 @@ jobs:
           YEST=$(date -u -d 'yesterday' +'%d/%m/%Y')
           if ! git diff --cached --quiet; then
             git commit -m "Daily update: proton JSON and video ${YEST}"
+            git pull --rebase
             git push
           else
             echo "Aucun changement à committer"
