@@ -11,6 +11,8 @@ import requests
 from concurrent.futures import ThreadPoolExecutor
 import re
 from scipy.stats import pearsonr
+import subprocess
+import shutil
 
 # --- Parameters ---
 FPS = 60
@@ -27,6 +29,43 @@ os.makedirs(os.path.join(BASE_DIR, "SOHO_videos"), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, "solar_activity"), exist_ok=True)
 PROTON_ROOT = os.path.join(BASE_DIR, "Protons")
 os.makedirs(PROTON_ROOT, exist_ok=True)
+
+# Optional audio track (project root audios/track.mp3)
+AUDIO_DIR = os.path.join(BASE_DIR, "audios")
+AUDIO_TRACK = os.path.join(AUDIO_DIR, "track.mp3")
+
+def add_audio_to_video(input_video: str, audio_path: str, output_video: str) -> str:
+    """Mux audio track into the MP4 video.
+    Prefers ffmpeg if available; falls back to moviepy if installed.
+    Returns output path (or input if mixing failed)."""
+    try:
+        # Prefer ffmpeg
+        if shutil.which("ffmpeg"):
+            # -shortest trims to video length; -c copy for video stream
+            cmd = [
+                "ffmpeg", "-y",
+                "-i", input_video,
+                "-i", audio_path,
+                "-c:v", "copy",
+                "-c:a", "aac",
+                "-shortest",
+                output_video,
+            ]
+            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return output_video
+        # Fallback: moviepy
+        try:
+            from moviepy.editor import VideoFileClip, AudioFileClip
+            clip = VideoFileClip(input_video)
+            audio = AudioFileClip(audio_path).volumex(0.6)
+            clip = clip.set_audio(audio)
+            clip.write_videofile(output_video, codec="libx264", audio_codec="aac", verbose=False, logger=None)
+            clip.close(); audio.close()
+            return output_video
+        except Exception:
+            return input_video
+    except Exception:
+        return input_video
 
 
 # =========================
@@ -447,6 +486,21 @@ if __name__ == "__main__":
     os.makedirs(final_dir, exist_ok=True)
     final_vid_path = os.path.join(final_dir, f"{date_folder_str}_solar_activity.mp4")
     final_vid = assemble_videos_vertically([soho_vid, proton_vid, neutron_vid], final_vid_path)
+
+    # Embed audio: overwrite the final file (no alternate versions)
+    if os.path.isfile(AUDIO_TRACK):
+        temp_out = os.path.join(final_dir, f"{date_folder_str}_solar_activity.tmp.mp4")
+        out = add_audio_to_video(final_vid, AUDIO_TRACK, temp_out)
+        if os.path.exists(out):
+            try:
+                # Replace the original file name
+                os.replace(out, final_vid_path)
+                final_vid = final_vid_path
+                print(f"🎵 Audio embedded into daily video: {final_vid_path}")
+            except OSError:
+                print("⚠️ Failed to replace video with audio-mixed version; keeping original.")
+        else:
+            print("ℹ️ Audio track found but mixing failed; keeping original video.")
 
     print("✅ Final video generated:", final_vid)
 
