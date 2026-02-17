@@ -1,4 +1,4 @@
-name: Auto Generate Solar Activity Video weekly
+name: Weekly script
 
 on:
   schedule:
@@ -36,6 +36,14 @@ jobs:
           pip install google-api-python-client google-auth google-auth-oauthlib
 
       # ============================================================
+      # 3.1 FFmpeg (for future audio muxing support)
+      # ============================================================
+      - name: Install ffmpeg (Ubuntu)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ffmpeg
+
+      # ============================================================
       # 4. Restaurer OAuth
       # ============================================================
       - name: Restore YouTube OAuth credentials
@@ -69,7 +77,9 @@ jobs:
           fi
 
           mkdir -p solar_activity_videos/weekly
-          cp -- "${LATEST}" solar_activity_videos/weekly/final_video.mp4
+          if [ "${LATEST}" != "solar_activity_videos/weekly/final_video.mp4" ]; then
+            cp -- "${LATEST}" solar_activity_videos/weekly/final_video.mp4
+          fi
 
       # ============================================================
       # 7. Upload YouTube Shorts (weekly)
