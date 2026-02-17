@@ -56,7 +56,9 @@ jobs:
         run: |
           set -e
           LATEST=$(find solar_activity_videos/daily -type f -name '*.mp4' -printf '%T@ %p\n' | sort -nr | awk '{print $2}' | head -n 1)
-          cp "$LATEST" solar_activity_videos/daily/final_video.mp4
+          if [ "$LATEST" != "solar_activity_videos/daily/final_video.mp4" ]; then
+            cp -- "$LATEST" solar_activity_videos/daily/final_video.mp4
+          fi
 
       # ============================================================
       # 7. Upload YouTube Shorts
