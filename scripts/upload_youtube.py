@@ -71,7 +71,7 @@ label = (
 human_type = "daily" if coa_type == "DAILY" else "weekly"
 title = (
     f"Solar Radiation {human_type} — {label} "
-    "#cosmic #radiation #airplane #spaceweather #solarflare"
+    "#cosmic #radiation #airplane #spaceweather #solarflare #cosmiconair #COA #outerwilds #AndrewPrahlow #Travelers"
 )
 
 description = (
