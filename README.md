@@ -1,4 +1,4 @@
-# AutoSolarActivid
+# COA-AutoSolarActivid
 
 Generates solar activity videos (daily and weekly), uploads to YouTube, and archives artifacts in the correct locations.
 
@@ -102,8 +102,8 @@ Usage & licensing notes:
 
 Clone the repository:
 ```bash
-git clone https://github.com/Ant1data/AutoSolarActivid.git
-cd AutoSolarActivid
+git clone https://github.com/Ant1data/COA-AutoSolarActivid.git
+cd COA-AutoSolarActivid
 ```
 
 Install dependencies:
@@ -151,7 +151,7 @@ Manual trigger: Actions tab > select workflow > "Run workflow".
 
 ## Project Structure
 ```
-AutoSolarActivid/
+COA-AutoSolarActivid/
   autovideo_daily.py
   autovideo_weekly.py
   requirements.txt
