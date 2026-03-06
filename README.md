@@ -224,5 +224,101 @@ Suggestions welcome: performance optimizations (e.g. frame interpolation), addin
 4. Push (`git push origin feature/my-feature`)
 5. Open a Pull Request
 
+---
+
+## 🚨 Système d'Alerte d'Activité Solaire
+
+Le projet inclut un système complet de surveillance et d'alerte pour détecter les activités solaires anormales basé sur les données de flux de protons des satellites GOES de la NOAA.
+
+### 📋 Fonctionnalités d'alerte
+
+Quatre modes de surveillance disponibles :
+
+1. **📧 Alertes par email** - Notifications automatiques
+2. **🌐 API Web REST** - Interface web avec pop-ups
+3. **🔌 Widget JavaScript** - Intégration dans sites web
+4. **🤖 GitHub Actions** - Surveillance automatique avec issues GitHub
+
+### 🔧 Configuration rapide des alertes
+
+1. **Créer la configuration** :
+   ```bash
+   cp alert_config.json.example alert_config.json
+   ```
+
+2. **Éditer `alert_config.json`** avec vos paramètres email (optionnel)
+
+3. **Tester le système** :
+   ```bash
+   python scripts/solar_alert_system.py --check-only
+   ```
+
+### 📊 Niveaux d'alerte NOAA
+
+| Niveau | Seuil (pfu) | Description |
+|--------|-------------|-------------|
+| **S1** | ≥10 | Mineur - Risque biologique mineur |
+| **S2** | ≥100 | Modéré - Risque accru en altitude |
+| **S3** | ≥1000 | Fort - Perturbations radio polaires |
+| **S4** | ≥10000 | Sévère - Risques satellites |
+| **S5** | ≥100000 | Extrême - Urgence critique |
+
+### 🤖 GitHub Actions pour les alertes
+
+Le workflow `.github/workflows/solar_alerts.yml` vérifie automatiquement **toutes les heures** et :
+
+- ✅ Analyse les données de protons
+- 🔔 Crée une **issue GitHub** automatiquement si alerte
+- 📱 Envoie notifications Discord/Slack (optionnel)
+- 📊 Archive l'historique des alertes
+- 📝 Historique accessible via GitHub Issues
+
+**Configuration des secrets GitHub** (optionnels) :
+
+Allez dans `Settings` → `Secrets and variables` → `Actions` :
+
+```
+ALERT_SMTP_SERVER=smtp.gmail.com
+ALERT_SMTP_PORT=587
+ALERT_SENDER_EMAIL=votre_email@gmail.com
+ALERT_SENDER_PASSWORD=mot_de_passe_application
+ALERT_RECIPIENT_EMAILS=["email@example.com"]
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+ALERT_THRESHOLD=10
+```
+
+**Déclenchement manuel** : Actions → Solar Activity Alerts → Run workflow
+
+### 🌐 API Web
+
+Lancer le serveur API :
+```bash
+python scripts/solar_alert_api.py
+```
+
+Endpoints disponibles :
+- `http://localhost:5000/` - Interface web
+- `http://localhost:5000/api/status` - État actuel
+- `http://localhost:5000/api/history` - Historique
+- `http://localhost:5000/api/thresholds` - Seuils configurés
+
+### 🔌 Widget pour site web
+
+Intégrez le widget dans votre HTML :
+```html
+<script src="scripts/solar_alert_widget.js"></script>
+<script>
+  SolarAlertWidget.init({
+    apiUrl: 'http://votre-serveur.com:5000',
+    checkInterval: 300000,
+    position: 'top-right'
+  });
+</script>
+```
+
+Exemple complet : voir `widget_demo.html`
+
+---
+
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
