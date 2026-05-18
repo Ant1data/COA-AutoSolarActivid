@@ -1,76 +1,99 @@
-﻿# AutoSolarActivid
+#AutoSolarActivid
 
-> ⚠️ **Ce dépôt n'est plus en production.**
+> ⚠️ **This repository is no longer in production.**
 >
-> Le système de génération de vidéos et d'alertes d'activité solaire a été intégré au projet **Cosmic On Air**.
-> Ce dépôt est conservé à titre d'archive.
+> The solar activity video and alert generation system has been integrated into the **Cosmic On Air** project.
+
+> This repository is maintained for archive purposes.
+
 >
-> - 🌐 Site officiel : [cosmic-on-air.org](https://cosmic-on-air.org/)
-> - 📦 Dépôt de production : [github.com/Cosmic-On-Air/COA-AutoSolarActivid](https://github.com/Cosmic-On-Air/COA-AutoSolarActivid)
+> - 🌐 Official website: [cosmic-on-air.org](https://cosmic-on-air.org/)
+> - 📦 Production repository: [github.com/Cosmic-On-Air/COA-AutoSolarActivid](https://github.com/Cosmic-On-Air/COA-AutoSolarActivid)
 
 ---
 
-## À propos de ce projet
+## About this project
 
-AutoSolarActivid est un système automatisé qui :
-- génère des **vidéos quotidiennes et hebdomadaires** de l'activité solaire (données NOAA/SOHO)
-- détecte les **anomalies de flux de protons** et envoie des alertes (Discord, email)
-- publie automatiquement les vidéos sur **YouTube**
-- archive les données protons au format JSON
+AutoSolarActivid is an automated system that:
 
-## Structure du projet
+- generates **daily and weekly** videos of solar activity (NOAA/SOHO data)
+- detects **proton flux anomalies** and sends alerts (Discord, email)
+- automatically publishes videos to **YouTube**
+- archives proton data in JSON format
 
-| Dossier / Fichier | Rôle |
+## Project structure
+
+| Folder / File | Role |
+
 |---|---|
-| `scripts/` | Scripts Python (vidéos, alertes, YouTube) |
-| `solar_activity_videos/` | Vidéos générées |
-| `Protons/` | Données NOAA GOES (flux de protons JSON) |
-| `requirements.txt` | Dépendances Python |
-| `.github/workflows/` | Automatisation GitHub Actions |
-| `alert_config.json` | Configuration des seuils d'alerte |
 
-## Fonctionnement général
+| `scripts/` | Python Scripts (Videos, Alerts, YouTube) |
 
-### Vidéos solaires
-- **Quotidien** : `scripts/autovideo_daily.py` génère une vidéo avec les données SOHO/NOAA du jour J-1, avec une piste audio embarquée (*Travelers* — Andrew Prahlow).
-- **Hebdomadaire** : `scripts/autovideo_weekly.py` génère une synthèse de la semaine (sans audio).
-- Les vidéos sont publiées automatiquement sur YouTube via `scripts/upload_youtube.py`.
+| `solar_activity_videos/` | Generated Videos |
 
-### Alertes solaires
-- `scripts/solar_alert_system.py` interroge l'API NOAA toutes les heures (via GitHub Actions).
-- Une alerte est déclenchée si le flux de protons GOES dépasse un seuil NOAA :
+| `Protons/` | NOAA GOES Data (JSON Proton Stream) |
 
-| Niveau | Seuil | Impact |
+| `requirements.txt` | Python Dependencies |
+
+| `.github/workflows/` | GitHub Actions Automation |
+
+| `alert_config.json` | Alert Threshold Configuration |
+
+## General Functionality
+
+### Solar Videos
+- **Daily**: `scripts/autovideo_daily.py` generates a video with the previous day's SOHO/NOAA data, with an embedded audio track (*Travelers* — Andrew Prahlow).
+
+- **Weekly**: `scripts/autovideo_weekly.py` generates a weekly summary (without audio).
+
+- Videos are automatically published to YouTube via `scripts/upload_youtube.py`.
+
+### Solar Alerts
+- `scripts/solar_alert_system.py` queries the NOAA API hourly (via GitHub Actions).
+
+- An alert is triggered if the GOES proton flux exceeds a NOAA threshold:
+
+| Level | Threshold | Impact |
+
 |--------|-------|--------|
-| S1 Mineur | ≥ 10 pfu | Risque biologique faible (astronautes) |
-| S2 Modéré | ≥ 100 pfu | Risque radiation en haute altitude |
-| S3 Fort | ≥ 1 000 pfu | Perturbations radio aux pôles |
-| S4 Sévère | ≥ 10 000 pfu | Risques vols polaires et satellites |
-| S5 Extrême | ≥ 100 000 pfu | Urgence critique |
+| S1 Minor | ≥ 10 pfu | Low biological risk (astronauts) |
 
-- En cas d'alerte, une notification est envoyée sur **Discord** (`DISCORD_WEBHOOK_URL`) et le fichier `CURRENT_SOLAR_ALERT.txt` est mis à jour dans le dépôt.
-- Niveau minimum d'alerte : **S2** par défaut (configurable dans `alert_config.json`).
-- Cooldown : **6 heures** entre deux alertes du même niveau.
+| S2 Moderate | ≥ 100 pfu | High-altitude radiation risk |
 
-### API locale (usage développement)
+| S3 High | ≥ 1,000 pfu | Radio interference at the poles |
+
+| S4 Severe | ≥ 10,000 pfu | Polar flight and satellite risks |
+
+| S5 Extreme | ≥ 100,000 pfu | Critical Emergency |
+
+- In case of an alert, a notification is sent on **Discord** (`DISCORD_WEBHOOK_URL`) and the `CURRENT_SOLAR_ALERT.txt` file is updated in the repository.
+
+- Minimum alert level: **S2** by default (configurable in `alert_config.json`).
+
+- Cooldown: **6 hours** between two alerts of the same level.
+
+### Local API (Development Use)
 
 ```bash
-# Lancer le serveur Flask
+# Start the Flask server
 python scripts/solar_alert_api.py
-# ou sous Windows :
+# or on Windows:
 .\start_api_server.ps1
 ```
 
-Endpoints : `http://localhost:5000/api/status` · `/api/history` · `/api/thresholds`
+Endpoints: `http://localhost:5000/api/status` · `/api/history` · `/api/thresholds`
 
-## Sources de données
+## Data Sources
 
-| Source | Données | Crédit |
+| Source | Data | Credit |
+
 |--------|---------|--------|
-| NOAA SWPC / GOES | Flux de protons | [services.swpc.noaa.gov](https://services.swpc.noaa.gov) |
-| SOHO LASCO C2 | Imagerie solaire | © NASA/ESA |
-| NMDB | Neutrons au sol | [nmdb.eu](https://www.nmdb.eu) |
+| NOAA SWPC / GOES | Proton Flux | [services.swpc.noaa.gov](https://services.swpc.noaa.gov) |
 
-## Licence
+| SOHO LASCO C2 | Solar Imaging | © NASA/ESA |
 
-MIT — voir [LICENSE](LICENSE).
+| NMDB | Ground Neutrons | [nmdb.eu](https://www.nmdb.eu) |
+
+## License
+
+MIT — see [LICENSE](LICENSE).
